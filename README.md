@@ -63,6 +63,23 @@ Most benchmarks follow the same pattern:
 
 In other words, students normally edit `src/kernel/<name>.cpp`, and sometimes add fields to the matching `include/<name>.h` argument struct if they need extra precomputed data.
 
+## Baseline Values
+
+The baseline times are defined in the benchmark headers and are used by `run_all.cpp` when it computes per-benchmark speedup. The table below is sorted by header file name in ascending order.
+
+| Header file | Baseline constant | Baseline time |
+| --- | --- | --- |
+| `aos_soa.h` | `BASELINE_AOS_SOA` | `900000 ns` |
+| `bitwise.h` | `BASELINE_BITWISE` | `250000 ns` |
+| `blackscholes.h` | `BASELINE_BLACKSCHOLES` | `4800000 ns` |
+| `graph.h` | `BASELINE_GRAPH` | `5000000 ns` |
+| `grff.h` | `BASELINE_GRFF` | `8500000 ns` |
+| `image_proc.h` | `BASELINE_IMAGE_PROC` | `43000000 ns` |
+| `matmul.h` | `BASELINE_MATMUL` | `88000000 ns` |
+| `relu.h` | `BASELINE_RELU` | `550000 ns` |
+| `sparse_spmm.h` | `BASELINE_SPARSE_SPMM` | `116000000 ns` |
+| `trace_replay.h` | `BASELINE_TRACE_REPLAY` | `3400000 ns` |
+
 ## What `bench.h` Is For
 
 `include/bench.h` is the shared benchmark harness used by both `single_bench` and `run_all`.
