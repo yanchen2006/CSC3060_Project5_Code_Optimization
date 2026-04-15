@@ -13,26 +13,26 @@ CSC3060_Project5_Code_Optimization/
 │   ├── bench.h             # Common benchmark harness and timing/check helpers
 │   ├── blackscholes.h      # Benchmark-specific args, baseline, wrappers, checker
 │   ├── bitwise.h
+│   ├── filter_gradient.h
 │   ├── graph.h
 │   ├── grff.h
 │   ├── image_proc.h
 │   ├── matmul.h
 │   ├── relu.h
 │   ├── sparse_spmm.h
-│   ├── trace_replay.h
-│   └── aos_soa.h
+│   └── trace_replay.h
 ├── src/
 │   ├── kernel/             # Naive reference code and student code live here
 │   │   ├── blackscholes.cpp
 │   │   ├── bitwise.cpp
+│   │   ├── filter_gradient.cpp
 │   │   ├── graph.cpp
 │   │   ├── grff.cpp
 │   │   ├── image_proc.cpp
 │   │   ├── matmul.cpp
 │   │   ├── relu.cpp
 │   │   ├── sparse_spmm.cpp
-│   │   ├── trace_replay.cpp
-│   │   └── aos_soa.cpp
+│   │   └── trace_replay.cpp
 │   ├── main/
 │   │   ├── single_bench.cpp # Run a small benchmark set while tuning/debugging
 │   │   └── run_all.cpp      # Run the full suite and report speedups
@@ -64,19 +64,20 @@ In other words, students normally edit `src/kernel/<name>.cpp`, and sometimes ad
 
 ## Baseline Values And Default Input Sizes
 
-The baseline times are defined in the benchmark headers and are used by `run_all.cpp` when it computes per-benchmark speedup. The table below is sorted by header file name in ascending order and only lists the kernels currently used in `run_all.cpp`.
+The baseline times are defined in the benchmark headers and are used by the benchmark harness when it computes per-benchmark speedup. The table below is sorted by header file name in ascending order. For kernels not yet registered in `run_all.cpp`, the default input size column says so explicitly.
 
 | Header file | Baseline constant | Baseline time (ns) | Default input size in `run_all.cpp` |
 | --- | --- | --- | --- |
-| `bitwise.h` | `BASELINE_BITWISE` | `250000` | vector length `1024000` |
-| `blackscholes.h` | `BASELINE_BLACKSCHOLES` | `4800000` | `81920` options |
-| `graph.h` | `BASELINE_GRAPH` | `5000000` | `1024000` nodes, average degree `8` |
-| `grff.h` | `BASELINE_GRFF` | `8500000` | feature size `1024000` |
-| `image_proc.h` | `BASELINE_IMAGE_PROC` | `43000000` | image size `1024 x 1000` |
-| `matmul.h` | `BASELINE_MATMUL` | `88000000` | matrix size `512 x 512` |
-| `relu.h` | `BASELINE_RELU` | `550000` | vector length `1024000` |
-| `sparse_spmm.h` | `BASELINE_SPARSE_SPMM` | `116000000` | LHS (left hand side) CSR matrix of `2048 x 2048`, the default dense RHS (right hand side) is also `2048 x 2048` |
-| `trace_replay.h` | `BASELINE_TRACE_REPLAY` | `3400000` | `65536` records and trace length `1048576` |
+| `bitwise.h` | `BASELINE_BITWISE` | `250,000` | vector length `1,024,000` |
+| `blackscholes.h` | `BASELINE_BLACKSCHOLES` | `4,800,000` | `81,l920` options |
+| `filter_gradient.h` | `BASELINE_FILTER_GRADIENT` | `25,000,000` | height x width `1024 x 1024` |
+| `graph.h` | `BASELINE_GRAPH` | `5,000,000` | `1,024,000` nodes, average degree `8` |
+| `grff.h` | `BASELINE_GRFF` | `8,500,000` | feature size `1,024,000` |
+| `image_proc.h` | `BASELINE_IMAGE_PROC` | `43,000,000` | image size `1024 x 1000` |
+| `matmul.h` | `BASELINE_MATMUL` | `88,000,000` | matrix size `512 x 512` |
+| `relu.h` | `BASELINE_RELU` | `550,000` | vector length `1,024,000` |
+| `sparse_spmm.h` | `BASELINE_SPARSE_SPMM` | `116,000,000` | LHS (left hand side) CSR matrix of `2048 x 2048`, the default dense RHS (right hand side) is also `2048 x 2048` |
+| `trace_replay.h` | `BASELINE_TRACE_REPLAY` | `3,400,000` | `65,536` records and trace length `1,048,576` |
 
 ## What `bench.h` Is For
 

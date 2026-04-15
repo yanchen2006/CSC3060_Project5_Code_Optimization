@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <random>
 
 void initialize_filter_gradient(filter_gradient_args* args,
@@ -152,15 +151,12 @@ bool filter_gradient_check(void* stu_ctx, void* ref_ctx, lab_test_func naive_fun
     const double r = static_cast<double>(ref_args.out);
     const double err = std::abs(s - r);
     const double atol = 1e-6;
-
-#ifdef DEBUG
     const double rel = (std::abs(r) > atol) ? err / std::abs(r) : err;
-    std::printf("DEBUG: filter_gradient stu=%f ref=%f err=%e rel=%e\n",
-                stu_args.out,
-                ref_args.out,
-                err,
-                rel);
-#endif
+    debug_log("DEBUG: filter_gradient stu={} ref={} err={} rel={}\n",
+              stu_args.out,
+              ref_args.out,
+              err,
+              rel);
 
     return err <= (atol + eps * std::abs(r));
 }

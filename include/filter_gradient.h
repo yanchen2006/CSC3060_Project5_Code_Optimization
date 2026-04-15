@@ -1,5 +1,5 @@
-#ifndef filter_gradient_H
-#define filter_gradient_H
+#ifndef FILTER_GRADIENT_H
+#define FILTER_GRADIENT_H
 
 #include "bench.h"
 #include <chrono>
