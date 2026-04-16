@@ -249,15 +249,19 @@ perf stat ./my_program [args...]
 
 The result would be like:
 
-![Example `perf stat` output](./src/res/image.png)
+![overallStat](./src/res/overallPerfStat.png)
+
+![overallStatRes](./src/res/overallPerfRes.png)
 
 ### 2. Measure key architecture-related metrics
 
 ```bash
-perf stat -e cycles,instructions,cache-misses,branch-misses ./my_program [args...]
+perf stat -e cycles,instructions,branch-misses ./my_program [args...]
 ```
 
-![Example `perf stat -e ...` output](./src/res/image-1.png)
+![Example `perf stat` output](./src/res/perfStat.png)
+
+![`perf stat` Result](./src/res/perfStatRes.png)
 
 ### 3. Record detailed samples
 
@@ -268,6 +272,7 @@ perf record -g -F 999 ./my_program [args...]
 If `perf` reports limited access to kernel symbols or kernel profiling data here, that is expected on our server. We can continue and focus on user-space samples from the benchmark itself.
 
 ![Permission note during `perf record`](./src/res/image-2.png)
+
 ![Completed `perf record` run](./src/res/image-3.png)
 
 ### 4. View hotspots
@@ -276,18 +281,33 @@ If `perf` reports limited access to kernel symbols or kernel profiling data here
 perf report
 ```
 
-![Permission note during `perf report`](./src/res/image-4.png)
-![Interactive `perf report` view](./src/res/image-5.png)
+![Permission note during `perf report`](./src/res/perfReportPermission.png)
+![Interactive `perf report` view](./src/res/perfReportView.png)
+
 
 ### 5. Drill down into a specific function
 
+We can use `perf annotate` to see the details of a certain function we are interested as long as we provide its symbol. But due to the possibility of function overload, its symbol could be so long. We can use the following command to find the complete symbol name firstly:
+
 ```bash
-perf annotate --stdio --source -l -s <funcName>
+nm -C ./single_bench | grep <funcName(>
 ```
 
-Then it shows the location of hottest source code:
+![nm_example](./src/res/nmSymbol.png)
 
-![Example `perf annotate` output](./src/res/image-6.png)
+
+Here the complete name is `csr_spmm(CSRMatrix const&, std::vector<float, std::allocator<float> > const&, std::vector<float, std::allocator<float> >&)`, then we have:
+
+
+```bash
+perf annotate --stdio --source -l -s "csr_spmm(CSRMatrix const&, std::vector<float, std::allocator<float> > const&, std::vector<float, std::allocator<float> >&)"
+```
+
+And it shows the location of hottest source code and corresponding assembly code:
+
+![Example `perf annotate` output](./src/res/perfAnnotate.png)
+
+![AsmSrc](./src/res/AsmSrc.png)
 
 ## Useful Tips
 
