@@ -73,10 +73,14 @@ void stu_bitwise(std::span<std::int8_t> result, std::span<const std::int8_t> a,
     const auto shared = ua & ub;
     const auto either = ua | ub;
     const auto diff = ua ^ ub;
-    const auto mixed0 = (diff & kMaskLo) | (~shared & ~kMaskLo));
+    const auto mixed0 = (diff & kMaskLo) | (~shared & ~kMaskLo);
     const auto mixed1 = ((either ^ kMaskHi) & (shared | ~kMaskHi)) ^ diff;
     
-    return mixed0 ^ mixed1;   
+    uint32_t combined = mixed0 ^ mixed1;
+    result[0] = static_cast<std::int8_t>((combined >> 0) & 0xFF);
+    result[1] = static_cast<std::int8_t>((combined >> 8) & 0xFF);
+    result[2] = static_cast<std::int8_t>((combined >> 16) & 0xFF);
+    result[3] = static_cast<std::int8_t>((combined >> 24) & 0xFF);  
 }
 
 void naive_bitwise_wrapper(void *ctx) {
