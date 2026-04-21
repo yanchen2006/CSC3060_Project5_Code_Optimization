@@ -57,7 +57,26 @@ void naive_bitwise(std::span<std::int8_t> result,
 // TODO: Optimize the bitwise function
 void stu_bitwise(std::span<std::int8_t> result, std::span<const std::int8_t> a,
                  std::span<const std::int8_t> b) {
-    // Implement your version...
+    constexpr std::uint32_t kMaskLo = 0x5A5A5A5A;
+    constexpr std::uint32_t kMaskHi = 0xC3C3C3C3;
+
+    // compact 4 int8 into 1 int32, so that 1 operation can compute 4 pairs of operands simultaneously
+    std::uint32_t ua = (uint32_t(a[0]) << 0)  |
+                       (uint32_t(a[1]) << 8)  |
+                       (uint32_t(a[2]) << 16) |
+                       (uint32_t(a[3]) << 24);
+    std::uint32_t ub = (uint32_t(b[0]) << 0)  |
+                       (uint32_t(b[1]) << 8)  |
+                       (uint32_t(b[2]) << 16) |
+                       (uint32_t(b[3]) << 24);
+    
+    const auto shared = ua & ub;
+    const auto either = ua | ub;
+    const auto diff = ua ^ ub;
+    const auto mixed0 = (diff & kMaskLo) | (~shared & ~kMaskLo));
+    const auto mixed1 = ((either ^ kMaskHi) & (shared | ~kMaskHi)) ^ diff;
+    
+    return mixed0 ^ mixed1;   
 }
 
 void naive_bitwise_wrapper(void *ctx) {
