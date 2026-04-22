@@ -6,34 +6,35 @@
 #include <vector>
 
 #include "bench.h"
-#include "relu.h"
+#include "image_proc.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr size_t relu_size = 1024000;  // 与 baseline 表一致
-    relu_args relu_args_naive;
-    initialize_relu(&relu_args_naive, relu_size, seed);
-    std::println("\tReLU: vector length={}", relu_size);
+    constexpr size_t width = 1024;
+    constexpr size_t height = 1000;   // 与 run_all 中 Image Proc 尺寸一致
+    image_proc_args args_naive;
+    initialize_image_proc(&args_naive, width, height, seed);
+    std::println("\tImage Proc: {} x {}", width, height);
 
-    // Student 版本需要独立的参数实例，避免相互干扰
-    relu_args relu_args_student;
-    initialize_relu(&relu_args_student, relu_size, seed);
+    // Student 版本需要独立的参数实例
+    image_proc_args args_student;
+    initialize_image_proc(&args_student, width, height, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"ReLU (Naive)",
-         naive_relu_wrapper,
-         naive_relu_wrapper,
-         relu_check,
-         &relu_args_naive,
-         &relu_args_naive,
-         BASELINE_RELU},
-        {"ReLU (Student)",
-         stu_relu_wrapper,
-         naive_relu_wrapper,
-         relu_check,
-         &relu_args_student,
-         &relu_args_student,
-         BASELINE_RELU},
+        {"Image Proc (Naive)",
+         naive_image_proc_wrapper,
+         naive_image_proc_wrapper,
+         image_proc_check,
+         &args_naive,
+         &args_naive,
+         BASELINE_IMAGE_PROC},
+        {"Image Proc (Student)",
+         stu_image_proc_wrapper,
+         naive_image_proc_wrapper,
+         image_proc_check,
+         &args_student,
+         &args_student,
+         BASELINE_IMAGE_PROC},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
