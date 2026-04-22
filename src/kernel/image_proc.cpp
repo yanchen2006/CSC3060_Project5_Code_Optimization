@@ -162,7 +162,104 @@ void naive_image_proc(image_proc_args& args) {
 // TODO: Student Implementation
 // -------------------------------------------------------------------------
 void stu_image_proc(image_proc_args& args) {
+    const size_t w = args.width;
+    const size_t h = args.height;
+    float* __restrict__ out = args.output.data();
+    const float* __restrict__ r = args.r_channel.data();
+    const float* __restrict__ g = args.g_channel.data();
+    const float* __restrict__ b = args.b_channel.data();
+    const float threshold = args.threshold;
 
+    for (size_t y = 0; y < h; ++y) {
+        for (size_t x = 0; x < w; ++x) {
+            size_t i = y * w + x;
+
+            // ---------- Stage 1: color_correct (apply_gain -> apply_shift -> apply_limit) ----------
+            float r_val = r[i];
+            float g_val = g[i];
+            float b_val = b[i];
+
+            // apply_gain: v * 1.05f
+            r_val = r_val * 1.05f;
+            g_val = g_val * 1.05f;
+            b_val = b_val * 1.05f;
+
+            // apply_shift: v + 0.02f
+            r_val = r_val + 0.02f;
+            g_val = g_val + 0.02f;
+            b_val = b_val + 0.02f;
+
+            // apply_limit: v > 1.0f ? 1.0f : v
+            r_val = (r_val > 1.0f) ? 1.0f : r_val;
+            g_val = (g_val > 1.0f) ? 1.0f : g_val;
+            b_val = (b_val > 1.0f) ? 1.0f : b_val;
+
+            // ---------- Stage 2: compute_gray ----------
+            float gray = r_val * 0.299f + g_val * 0.587f + b_val * 0.114f;
+
+            // ---------- Stage 3: enhance_contrast ----------
+            // adjusted = clamp((gray - 0.05f) / 0.90f, 0.0f, 1.0f)
+            float adjusted = (gray - 0.05f) / 0.90f;
+            if (adjusted < 0.0f) adjusted = 0.0f;
+            if (adjusted > 1.0f) adjusted = 1.0f;
+            // Sigmoidal S-Curve: adjusted^2 * (3 - 2*adjusted)
+            float grayEnhance = adjusted * adjusted * (3.0f - 2.0f * adjusted);
+
+            // ---------- Stage 4: hdr_compress ----------
+            // calculate_gain(intensity) with intensity = grayEnhance * 1.2f
+            float intensity = grayEnhance * 1.2f;
+            float g1 = intensity * 0.5f;
+            float g2 = g1 * g1 + 0.1f;
+            float g3 = std::sqrt(g2);
+            float gain = (g3 > 1.0f) ? (1.0f / g3) : (g3 * 0.95f);
+            float compress_val = grayEnhance * gain;
+            compress_val = compress_val / (1.0f + compress_val);
+
+            // ---------- Stage 5: complex_mask_logic ----------
+            const float p0 = 0.11f, p1 = 0.22f, p2 = 0.33f, p3 = 0.44f;
+            const float p4 = 0.55f, p5 = 0.66f, p6 = 0.77f, p7 = 0.88f;
+            const float p8 = 0.99f, p9 = 1.01f;
+
+            float mask;
+            if (compress_val > threshold) {
+                mask = (r_val * p0) + (g_val * p1) - (b_val * p2) + p9;
+                if (mask > 0.8f)
+                    mask *= p3;
+                else
+                    mask += p4;
+            } else {
+                mask = (r_val * p5) - (g_val * p6) + (b_val * p7) - p8;
+                if (mask < 0.2f)
+                    mask += p1;
+                else
+                    mask *= p2;
+            }
+
+            float noise = std::sin(compress_val * p0) * std::cos(r_val * p1);
+            float final_val = (mask * 0.7f) + (noise * 0.3f);
+            if (final_val < 0.0f) final_val = 0.0f;
+            if (final_val > 1.0f) final_val = 1.0f;
+
+            // ---------- Stage 6: importance_weight ----------
+            static const float lut[] = {0.0f, 0.3f, 1.0f, 0.3f, 0.0f};
+            float scaled = final_val * 4.0f;
+            int idx = static_cast<int>(scaled);
+            if (idx < 0) idx = 0;
+            if (idx > 4) idx = 4;
+            float weight = scaled - static_cast<float>(idx);
+            float interp;
+            if (idx < 4)
+                interp = lut[idx] * (1.0f - weight) + lut[idx + 1] * weight;
+            else
+                interp = lut[4];
+
+            // ---------- Output ----------
+            float out_val = compress_val * interp;
+            if (out_val < 0.0f) out_val = 0.0f;
+            if (out_val > 1.0f) out_val = 1.0f;
+            out[i] = out_val;
+        }
+    }
 }
 
 
