@@ -53,16 +53,12 @@ void stu_matmul(std::vector<float>& C,
     std::fill(C.begin(), C.end(), 0.0f);
     
     // loop permutation: i->k->j, s.t. the inner loop accesses continuous memory
-    for (int ii = 0; ii < n; ii += BLOCK) 
-        for (int jj = 0; jj < n; jj += BLOCK)
-            for (int kk = 0; kk < n; kk += BLOCK)
-                for (int i = ii; i < ii+BLOCK && i<n; ++i)
-                    for (int j = jj; j < jj+BLOCK && j<n; ++j) {
-                        float sum = C[i*n+j];
-                        for (int k = kk; k < kk+BLOCK && k<n; ++k)
-                            sum += A[i*n+k] * B[k*n+j];
-                        C[i*n+j] = sum;
-                    }
+    for (int i = 0; i < n; ++i)
+        for (int k = 0; k < n; ++k) {
+            float aik = A[i * n + k];
+            for (int j = 0; j < n; ++j)
+                C[i * n + j] += aik * B[k * n + j];
+        }
 }
 
 void naive_matmul_wrapper(void* ctx) {
