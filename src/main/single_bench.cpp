@@ -6,35 +6,34 @@
 #include <vector>
 
 #include "bench.h"
-#include "image_proc.h"
+#include "matmul.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr size_t width = 1024;
-    constexpr size_t height = 1000;   // 与 run_all 中 Image Proc 尺寸一致
-    image_proc_args args_naive;
-    initialize_image_proc(&args_naive, width, height, seed);
-    std::println("\tImage Proc: {} x {}", width, height);
+    constexpr int n = 512;  // 与 baseline 表一致
+    matmul_args args_naive;
+    initialize_matmul(args_naive, n, seed);
+    std::println("\tMatMul: n={}", n);
 
     // Student 版本需要独立的参数实例
-    image_proc_args args_student;
-    initialize_image_proc(&args_student, width, height, seed);
+    matmul_args args_student;
+    initialize_matmul(args_student, n, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"Image Proc (Naive)",
-         naive_image_proc_wrapper,
-         naive_image_proc_wrapper,
-         image_proc_check,
+        {"MatMul (Naive)",
+         naive_matmul_wrapper,
+         naive_matmul_wrapper,
+         matmul_check,
          &args_naive,
          &args_naive,
-         BASELINE_IMAGE_PROC},
-        {"Image Proc (Student)",
-         stu_image_proc_wrapper,
-         naive_image_proc_wrapper,
-         image_proc_check,
+         BASELINE_MATMUL},
+        {"MatMul (Student)",
+         stu_matmul_wrapper,
+         naive_matmul_wrapper,
+         matmul_check,
          &args_student,
          &args_student,
-         BASELINE_IMAGE_PROC},
+         BASELINE_MATMUL},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
