@@ -92,9 +92,36 @@ void naive_trace_replay(uint64_t& out,
 void stu_trace_replay(uint64_t& out,
                       const std::vector<RequestRecord>& records,
                       const std::vector<uint32_t>& trace) {
-    // TODO: Implement your version, and call it in stu_trace_replay_wrapper
-}
+    const size_t n = trace.size();
+    // 预计算每个 record 的 cost（8 字节 vs 原始 ~100 字节）
+    std::vector<uint64_t> costs(records.size());
+    for (size_t i = 0; i < records.size(); ++i) {
+        const auto& rec = records[i];
+        uint64_t cost = rec.base_cost;
+        cost += 2ull * rec.retry_penalty;
+        cost += rec.miss_penalty;
+        cost += rec.bytes >> 4;
+        costs[i] = cost;
+    }
 
+    const uint64_t order_mix = 1315423911ull;
+    uint64_t total = 0;
+    const size_t PREFETCH_DIST = 16;  // 可根据硬件调整（典型值 8~32）
+
+    for (size_t i = 0; i < n; ++i) {
+        // 预取未来的 cost 值
+        size_t future = i + PREFETCH_DIST;
+        if (future < n) {
+            uint32_t idx = trace[future];
+            __builtin_prefetch(&costs[idx], 0, 3);  // 读，高局部性
+        }
+
+        uint32_t idx = trace[i];
+        total = total * order_mix + costs[idx];
+    }
+
+    out = total;
+}
 void naive_trace_replay_wrapper(void* ctx) {
     auto& args = *static_cast<trace_replay_args*>(ctx);
     naive_trace_replay(args.out, args.records, args.trace);
