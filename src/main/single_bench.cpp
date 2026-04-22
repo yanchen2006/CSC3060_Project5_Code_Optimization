@@ -6,34 +6,35 @@
 #include <vector>
 
 #include "bench.h"
-#include "matmul.h"
+#include "trace_replay.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr int n = 512;  // 与 baseline 表一致
-    matmul_args args_naive;
-    initialize_matmul(args_naive, n, seed);
-    std::println("\tMatMul: n={}", n);
+    constexpr size_t record_count = 1 << 16;   // 65536
+    constexpr size_t trace_count = 1 << 20;    // 1048576
+    trace_replay_args args_naive;
+    initialize_trace_replay(args_naive, record_count, trace_count, seed);
+    std::println("\tTrace Replay: records={}, trace_length={}", record_count, trace_count);
 
     // Student 版本需要独立的参数实例
-    matmul_args args_student;
-    initialize_matmul(args_student, n, seed);
+    trace_replay_args args_student;
+    initialize_trace_replay(args_student, record_count, trace_count, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"MatMul (Naive)",
-         naive_matmul_wrapper,
-         naive_matmul_wrapper,
-         matmul_check,
+        {"Trace Replay (Naive)",
+         naive_trace_replay_wrapper,
+         naive_trace_replay_wrapper,
+         trace_replay_check,
          &args_naive,
          &args_naive,
-         BASELINE_MATMUL},
-        {"MatMul (Student)",
-         stu_matmul_wrapper,
-         naive_matmul_wrapper,
-         matmul_check,
+         BASELINE_TRACE_REPLAY},
+        {"Trace Replay (Student)",
+         stu_trace_replay_wrapper,
+         naive_trace_replay_wrapper,
+         trace_replay_check,
          &args_student,
          &args_student,
-         BASELINE_MATMUL},
+         BASELINE_TRACE_REPLAY},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
