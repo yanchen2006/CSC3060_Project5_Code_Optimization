@@ -6,34 +6,34 @@
 #include <vector>
 
 #include "bench.h"
-#include "bitwise.h"
+#include "relu.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr size_t bitwise_size = 1024000;  // 与 baseline 表一致
-    bitwise_args bitwise_args_naive;
-    initialize_bitwise(&bitwise_args_naive, bitwise_size, seed);
-    std::println("\tBitwise: vector length={}", bitwise_size);
+    constexpr size_t relu_size = 1024000;  // 与 baseline 表一致
+    relu_args relu_args_naive;
+    initialize_relu(&relu_args_naive, relu_size, seed);
+    std::println("\tReLU: vector length={}", relu_size);
 
-    // 注意：Student 版本需要独立的参数实例，否则两个 benchmark 会互相干扰
-    bitwise_args bitwise_args_student;
-    initialize_bitwise(&bitwise_args_student, bitwise_size, seed);
+    // Student 版本需要独立的参数实例，避免相互干扰
+    relu_args relu_args_student;
+    initialize_relu(&relu_args_student, relu_size, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"Bitwise (Naive)",
-         naive_bitwise_wrapper,
-         naive_bitwise_wrapper,
-         bitwise_check,
-         &bitwise_args_naive,
-         &bitwise_args_naive,
-         BASELINE_BITWISE},
-        {"Bitwise (Student)",
-         stu_bitwise_wrapper,
-         naive_bitwise_wrapper,
-         bitwise_check,
-         &bitwise_args_student,
-         &bitwise_args_student,
-         BASELINE_BITWISE},
+        {"ReLU (Naive)",
+         naive_relu_wrapper,
+         naive_relu_wrapper,
+         relu_check,
+         &relu_args_naive,
+         &relu_args_naive,
+         BASELINE_RELU},
+        {"ReLU (Student)",
+         stu_relu_wrapper,
+         naive_relu_wrapper,
+         relu_check,
+         &relu_args_student,
+         &relu_args_student,
+         BASELINE_RELU},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
