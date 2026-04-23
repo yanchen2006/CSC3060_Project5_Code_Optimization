@@ -44,23 +44,7 @@ void naive_matmul(std::vector<float>& C,
     }
 }
 
-void stu_matmul(std::vector<float>& C,
-                const std::vector<float>& A,
-                const std::vector<float>& B,
-                int n) {
-    // TODO: Implement your version, and call it in stu_matmul_wrapper
-
-    std::fill(C.begin(), C.end(), 0.0f);
-    
-    // loop permutation: i->k->j, s.t. the inner loop accesses continuous memory
-    for (int i = 0; i < n; ++i)
-        for (int k = 0; k < n; ++k) {
-            float aik = A[i * n + k];
-            for (int j = 0; j < n; ++j)
-                C[i * n + j] += aik * B[k * n + j];
-        }
-}
-
+// TODO: Implement your version, and call it in stu_matmul_wrapper
 void naive_matmul_wrapper(void* ctx) {
     auto& args = *static_cast<matmul_args*>(ctx);
     naive_matmul(args.C, args.A, args.B, args.n);
