@@ -44,6 +44,37 @@ void naive_matmul(std::vector<float>& C,
     }
 }
 
+void stu_matmul(std::vector<float>& C,
+                const std::vector<float>& A,
+                const std::vector<float>& B,
+                int n) {
+    // TODO: Implement your version, and call it in stu_matmul_wrapper
+    std::fill(C.begin(), C.end(), 0.0f);
+    
+    // 选择分块大小（通常为 32 或 64，需适配缓存）
+    const int BLOCK = 64;  // 可根据 L1 缓存大小调整（64*64*4B = 16KB，三块约 48KB）
+    
+    // 分块循环：ii, jj, kk
+    for (int ii = 0; ii < n; ii += BLOCK) {
+        int i_max = std::min(ii + BLOCK, n);
+        for (int jj = 0; jj < n; jj += BLOCK) {
+            int j_max = std::min(jj + BLOCK, n);
+            for (int kk = 0; kk < n; kk += BLOCK) {
+                int k_max = std::min(kk + BLOCK, n);
+                // 块内计算（使用 i-k-j 顺序以获得连续访问）
+                for (int i = ii; i < i_max; ++i) {
+                    for (int k = kk; k < k_max; ++k) {
+                        float aik = A[i * n + k];
+                        // 内层 j 循环访问 C 和 B 的连续内存
+                        for (int j = jj; j < j_max; ++j) {
+                            C[i * n + j] += aik * B[k * n + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 // TODO: Implement your version, and call it in stu_matmul_wrapper
 void naive_matmul_wrapper(void* ctx) {
     auto& args = *static_cast<matmul_args*>(ctx);
