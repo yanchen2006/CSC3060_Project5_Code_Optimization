@@ -6,34 +6,34 @@
 #include <vector>
 
 #include "bench.h"
-#include "matmul.h"
+#include "bitwise.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr int n = 512;  // 与 baseline 表一致
-    matmul_args args_naive;
-    initialize_matmul(args_naive, n, seed);
-    std::println("\tMatMul: n={}", n);
+    constexpr size_t bitwise_size = 1024000;  // 与 baseline 表一致
+    bitwise_args bitwise_args_naive;
+    initialize_bitwise(&bitwise_args_naive, bitwise_size, seed);
+    std::println("\tBitwise: vector length={}", bitwise_size);
 
-    // Student 版本需要独立的参数实例
-    matmul_args args_student;
-    initialize_matmul(args_student, n, seed);
+    // 注意：Student 版本需要独立的参数实例，否则两个 benchmark 会互相干扰
+    bitwise_args bitwise_args_student;
+    initialize_bitwise(&bitwise_args_student, bitwise_size, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"MatMul (Naive)",
-         naive_matmul_wrapper,
-         naive_matmul_wrapper,
-         matmul_check,
-         &args_naive,
-         &args_naive,
-         BASELINE_MATMUL},
-        {"MatMul (Student)",
-         stu_matmul_wrapper,
-         naive_matmul_wrapper,
-         matmul_check,
-         &args_student,
-         &args_student,
-         BASELINE_MATMUL},
+        {"Bitwise (Naive)",
+         naive_bitwise_wrapper,
+         naive_bitwise_wrapper,
+         bitwise_check,
+         &bitwise_args_naive,
+         &bitwise_args_naive,
+         BASELINE_BITWISE},
+        {"Bitwise (Student)",
+         stu_bitwise_wrapper,
+         naive_bitwise_wrapper,
+         bitwise_check,
+         &bitwise_args_student,
+         &bitwise_args_student,
+         BASELINE_BITWISE},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
