@@ -56,43 +56,39 @@ void naive_bitwise(std::span<std::int8_t> result,
 }
 
 // TODO: Optimize the bitwise function
-void stu_bitwise(std::span<std::int8_t> result,
-                 std::span<const std::int8_t> a,
+void stu_bitwise(std::span<std::int8_t> result, std::span<const std::int8_t> a,
                  std::span<const std::int8_t> b) {
     constexpr std::uint32_t kMaskLo = 0x5A5A5A5A;
     constexpr std::uint32_t kMaskHi = 0xC3C3C3C3;
-    
+
     const std::size_t n = std::min({result.size(), a.size(), b.size()});
     std::size_t i = 0;
     
-    // compact 4 int8 into 1 int32, so that 1 operation can compute 4 pairs of operands simultaneously
+    // 每次处理 4 个元素
     for (; i + 3 < n; i += 4) {
-        // 打包 4 个 int8_t 到 uint32_t（小端序：低地址对应低字节）
-        std::uint32_t ua = (static_cast<std::uint8_t>(a[i+0]) << 0)  |
-                           (static_cast<std::uint8_t>(a[i+1]) << 8)  |
-                           (static_cast<std::uint8_t>(a[i+2]) << 16) |
-                           (static_cast<std::uint8_t>(a[i+3]) << 24);
-        std::uint32_t ub = (static_cast<std::uint8_t>(b[i+0]) << 0)  |
-                           (static_cast<std::uint8_t>(b[i+1]) << 8)  |
-                           (static_cast<std::uint8_t>(b[i+2]) << 16) |
-                           (static_cast<std::uint8_t>(b[i+3]) << 24);
+        std::uint32_t ua = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i])) << 0) |
+                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i+1])) << 8) |
+                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i+2])) << 16) |
+                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i+3])) << 24);
+        std::uint32_t ub = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i])) << 0) |
+                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i+1])) << 8) |
+                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i+2])) << 16) |
+                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i+3])) << 24);
         
         const auto shared = ua & ub;
         const auto either = ua | ub;
         const auto diff = ua ^ ub;
         const auto mixed0 = (diff & kMaskLo) | (~shared & ~kMaskLo);
         const auto mixed1 = ((either ^ kMaskHi) & (shared | ~kMaskHi)) ^ diff;
+        const auto combined = mixed0 ^ mixed1;
         
-        const std::uint32_t combined = mixed0 ^ mixed1;
-        
-        // 解包写回
-        result[i+0] = static_cast<std::int8_t>((combined >> 0) & 0xFF);
+        result[i]   = static_cast<std::int8_t>((combined >> 0) & 0xFF);
         result[i+1] = static_cast<std::int8_t>((combined >> 8) & 0xFF);
         result[i+2] = static_cast<std::int8_t>((combined >> 16) & 0xFF);
         result[i+3] = static_cast<std::int8_t>((combined >> 24) & 0xFF);
     }
     
-    // 处理剩余不足 4 个的元素（标量方式，直接复用参考实现的逻辑）
+    // 处理剩余不足 4 个的元素（用标量方法）
     for (; i < n; ++i) {
         const auto ua = static_cast<std::uint8_t>(a[i]);
         const auto ub = static_cast<std::uint8_t>(b[i]);
