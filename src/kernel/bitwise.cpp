@@ -56,48 +56,36 @@ void naive_bitwise(std::span<std::int8_t> result,
 }
 
 // TODO: Optimize the bitwise function
-void stu_bitwise(std::span<std::int8_t> result, std::span<const std::int8_t> a,
+void stu_bitwise(std::span<std::int8_t> result,
+                 std::span<const std::int8_t> a,
                  std::span<const std::int8_t> b) {
-    constexpr std::uint32_t kMaskLo = 0x5A5A5A5A;
-    constexpr std::uint32_t kMaskHi = 0xC3C3C3C3;
-
     const std::size_t n = std::min({result.size(), a.size(), b.size()});
+
+    constexpr std::uint64_t K24 = 0x2424242424242424ULL;
+    constexpr std::uint64_t K18 = 0x1818181818181818ULL;
+    constexpr std::uint64_t K81 = 0x8181818181818181ULL;
+
     std::size_t i = 0;
-    
-    // 每次处理 4 个元素
-    for (; i + 3 < n; i += 4) {
-        std::uint32_t ua = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i])) << 0) |
-                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i+1])) << 8) |
-                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i+2])) << 16) |
-                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(a[i+3])) << 24);
-        std::uint32_t ub = (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i])) << 0) |
-                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i+1])) << 8) |
-                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i+2])) << 16) |
-                           (static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i+3])) << 24);
-        
-        const auto shared = ua & ub;
-        const auto either = ua | ub;
-        const auto diff = ua ^ ub;
-        const auto mixed0 = (diff & kMaskLo) | (~shared & ~kMaskLo);
-        const auto mixed1 = ((either ^ kMaskHi) & (shared | ~kMaskHi)) ^ diff;
-        const auto combined = mixed0 ^ mixed1;
-        
-        result[i]   = static_cast<std::int8_t>((combined >> 0) & 0xFF);
-        result[i+1] = static_cast<std::int8_t>((combined >> 8) & 0xFF);
-        result[i+2] = static_cast<std::int8_t>((combined >> 16) & 0xFF);
-        result[i+3] = static_cast<std::int8_t>((combined >> 24) & 0xFF);
+
+    // 每次处理 8 个字节
+    for (; i + 8 <= n; i += 8) {
+        std::uint64_t va, vb;
+        std::memcpy(&va, a.data() + i, sizeof(std::uint64_t));
+        std::memcpy(&vb, b.data() + i, sizeof(std::uint64_t));
+
+        const std::uint64_t e = va | vb;
+        const std::uint64_t r = K24 | (e & K18) | (~e & K81);
+
+        std::memcpy(result.data() + i, &r, sizeof(std::uint64_t));
     }
-    
-    // 处理剩余不足 4 个的元素（用标量方法）
+
+    // 尾部不足 8 个
     for (; i < n; ++i) {
-        const auto ua = static_cast<std::uint8_t>(a[i]);
-        const auto ub = static_cast<std::uint8_t>(b[i]);
-        const auto shared = ua & ub;
-        const auto either = ua | ub;
-        const auto diff = ua ^ ub;
-        const auto mixed0 = (diff & 0x5A) | (~shared & ~0x5A);
-        const auto mixed1 = ((either ^ 0xC3) & (shared | ~0xC3)) ^ diff;
-        result[i] = static_cast<std::int8_t>(mixed0 ^ mixed1);
+        const std::uint8_t e =
+            static_cast<std::uint8_t>(a[i]) | static_cast<std::uint8_t>(b[i]);
+        const std::uint8_t r =
+            static_cast<std::uint8_t>(0x24u | (e & 0x18u) | (~e & 0x81u));
+        result[i] = static_cast<std::int8_t>(r);
     }
 }
 
