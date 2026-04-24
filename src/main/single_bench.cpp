@@ -6,34 +6,35 @@
 #include <vector>
 
 #include "bench.h"
-#include "relu.h"
+#include "trace_replay.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr size_t relu_size = 1024000;  // 与 baseline 表一致
-    relu_args relu_args_naive;
-    initialize_relu(&relu_args_naive, relu_size, seed);
-    std::println("\tReLU: vector length={}", relu_size);
+    constexpr size_t record_count = 1 << 16;   // 65536
+    constexpr size_t trace_count = 1 << 20;    // 1048576
+    trace_replay_args args_naive;
+    initialize_trace_replay(args_naive, record_count, trace_count, seed);
+    std::println("\tTrace Replay: records={}, trace_length={}", record_count, trace_count);
 
-    // Student 版本需要独立的参数实例，避免相互干扰
-    relu_args relu_args_student;
-    initialize_relu(&relu_args_student, relu_size, seed);
+    // Student 版本需要独立的参数实例
+    trace_replay_args args_student;
+    initialize_trace_replay(args_student, record_count, trace_count, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"ReLU (Naive)",
-         naive_relu_wrapper,
-         naive_relu_wrapper,
-         relu_check,
-         &relu_args_naive,
-         &relu_args_naive,
-         BASELINE_RELU},
-        {"ReLU (Student)",
-         stu_relu_wrapper,
-         naive_relu_wrapper,
-         relu_check,
-         &relu_args_student,
-         &relu_args_student,
-         BASELINE_RELU},
+        {"Trace Replay (Naive)",
+         naive_trace_replay_wrapper,
+         naive_trace_replay_wrapper,
+         trace_replay_check,
+         &args_naive,
+         &args_naive,
+         BASELINE_TRACE_REPLAY},
+        {"Trace Replay (Student)",
+         stu_trace_replay_wrapper,
+         naive_trace_replay_wrapper,
+         trace_replay_check,
+         &args_student,
+         &args_student,
+         BASELINE_TRACE_REPLAY},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
