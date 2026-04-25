@@ -6,35 +6,35 @@
 #include <vector>
 
 #include "bench.h"
-#include "trace_replay.h"
+#include "image_proc.h"
 
 int main() {
     std::uint32_t seed = 12345u;
-    constexpr size_t record_count = 1 << 16;   // 65536
-    constexpr size_t trace_count = 1 << 20;    // 1048576
-    trace_replay_args args_naive;
-    initialize_trace_replay(args_naive, record_count, trace_count, seed);
-    std::println("\tTrace Replay: records={}, trace_length={}", record_count, trace_count);
+    constexpr size_t width = 1024;
+    constexpr size_t height = 1000;   // 与 run_all 中 Image Proc 尺寸一致
+    image_proc_args args_naive;
+    initialize_image_proc(&args_naive, width, height, seed);
+    std::println("\tImage Proc: {} x {}", width, height);
 
     // Student 版本需要独立的参数实例
-    trace_replay_args args_student;
-    initialize_trace_replay(args_student, record_count, trace_count, seed);
+    image_proc_args args_student;
+    initialize_image_proc(&args_student, width, height, seed);
 
     std::vector<bench_t> benchmarks = {
-        {"Trace Replay (Naive)",
-         naive_trace_replay_wrapper,
-         naive_trace_replay_wrapper,
-         trace_replay_check,
+        {"Image Proc (Naive)",
+         naive_image_proc_wrapper,
+         naive_image_proc_wrapper,
+         image_proc_check,
          &args_naive,
          &args_naive,
-         BASELINE_TRACE_REPLAY},
-        {"Trace Replay (Student)",
-         stu_trace_replay_wrapper,
-         naive_trace_replay_wrapper,
-         trace_replay_check,
+         BASELINE_IMAGE_PROC},
+        {"Image Proc (Student)",
+         stu_image_proc_wrapper,
+         naive_image_proc_wrapper,
+         image_proc_check,
          &args_student,
          &args_student,
-         BASELINE_TRACE_REPLAY},
+         BASELINE_IMAGE_PROC},
     };
 
     std::cout << "\nRunning Benchmarks...\n";
